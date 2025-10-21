@@ -4,8 +4,6 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.MediaDescriptionCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.session.MediaSession
@@ -14,9 +12,14 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.SettableFuture
 import com.quranmedia.player.media.player.QuranPlayer
 import com.quranmedia.player.presentation.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -27,6 +30,7 @@ class QuranMediaService : MediaSessionService() {
     lateinit var quranPlayer: QuranPlayer
 
     private var mediaSession: MediaSession? = null
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     companion object {
         const val CUSTOM_COMMAND_NEXT_AYAH = "NEXT_AYAH"
@@ -51,7 +55,7 @@ class QuranMediaService : MediaSessionService() {
             .setSessionActivity(sessionActivityPendingIntent)
             .build()
 
-        Timber.d("QuranMediaService created with notification support")
+        Timber.d("QuranMediaService created")
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
@@ -132,17 +136,67 @@ class QuranMediaService : MediaSessionService() {
             controller: MediaSession.ControllerInfo,
             mediaItems: MutableList<MediaItem>
         ): ListenableFuture<MutableList<MediaItem>> {
-            val updatedMediaItems = mediaItems.map { mediaItem ->
-                if (mediaItem.localConfiguration?.uri != null) {
-                    mediaItem
-                } else {
-                    mediaItem.buildUpon()
-                        .setUri(mediaItem.requestMetadata.mediaUri)
-                        .build()
-                }
-            }.toMutableList()
+            val result = SettableFuture.create<MutableList<MediaItem>>()
 
-            return Futures.immediateFuture(updatedMediaItems)
+            serviceScope.launch {
+                try {
+                    val updatedMediaItems = mediaItems.map { mediaItem ->
+                        val mediaId = mediaItem.mediaId
+
+                        // Check if it already has a URI
+                        if (mediaItem.localConfiguration?.uri != null) {
+                            return@map mediaItem
+                        }
+
+                        // Check if requestMetadata has a URI
+                        val requestUri = mediaItem.requestMetadata.mediaUri
+                        if (requestUri != null) {
+                            return@map mediaItem.buildUpon()
+                                .setUri(requestUri)
+                                .build()
+                        }
+
+                        // Parse mediaId to build URI (for Android Auto)
+                        // Format 1: "reciter_ar.alafasy:surah_1" (from browse selection)
+                        // Format 2: "surah_1" (from voice search or Browse by Surah)
+
+                        var reciterId: String? = null
+                        var surahNumber: Int? = null
+
+                        if (mediaId.contains(":") && mediaId.contains("surah_")) {
+                            // Format 1: Full format with reciter
+                            val parts = mediaId.split(":")
+                            reciterId = parts[0].removePrefix("reciter_")
+                            surahNumber = parts[1].removePrefix("surah_").toIntOrNull()
+                        } else if (mediaId.startsWith("surah_")) {
+                            // Format 2: Just surah number - use default reciter (ar.alafasy)
+                            surahNumber = mediaId.removePrefix("surah_").toIntOrNull()
+                            reciterId = "ar.alafasy"
+                            Timber.d("Using default reciter ar.alafasy for mediaId: $mediaId")
+                        }
+
+                        if (surahNumber != null && reciterId != null) {
+                            val audioUrl = "https://cdn.islamic.network/quran/audio-surah/128/$reciterId/$surahNumber.mp3"
+                            Timber.d("Building MediaItem for $mediaId with URI: $audioUrl")
+
+                            return@map mediaItem.buildUpon()
+                                .setUri(audioUrl)
+                                .build()
+                        }
+
+                        // Fallback: return as-is
+                        Timber.w("Could not resolve URI for mediaId: $mediaId")
+                        mediaItem
+                    }.toMutableList()
+
+                    result.set(updatedMediaItems)
+                } catch (e: Exception) {
+                    Timber.e(e, "Error in onAddMediaItems")
+                    result.set(mediaItems)
+                }
+            }
+
+            return result
         }
     }
 }

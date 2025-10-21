@@ -76,6 +76,9 @@
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
+            <meta-data
+                android:name="android.media.session"
+                android:value="true" />
         </service>
 
         <!-- MediaButtonReceiver -->
