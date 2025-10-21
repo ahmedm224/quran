@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Quran Media Player</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_reciters">Reciters</string>
+    <string name="nav_surahs">Surahs</string>
+    <string name="nav_bookmarks">Bookmarks</string>
+    <string name="nav_downloads">Downloads</string>
+
+    <!-- Player -->
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="next_ayah">Next Ayah</string>
+    <string name="previous_ayah">Previous Ayah</string>
+    <string name="loop_toggle">Loop</string>
+    <string name="speed_control">Speed</string>
+    <string name="sleep_timer">Sleep Timer</string>
+
+    <!-- Seeking -->
+    <string name="seek_forward">Seek Forward</string>
+    <string name="seek_backward">Seek Backward</string>
+    <string name="nudge_forward_small">+250ms</string>
+    <string name="nudge_backward_small">-250ms</string>
+    <string name="nudge_forward_large">+1s</string>
+    <string name="nudge_backward_large">-1s</string>
+
+    <!-- Content descriptions for accessibility -->
+    <string name="cd_play_pause">Play or pause</string>
+    <string name="cd_next">Next ayah</string>
+    <string name="cd_previous">Previous ayah</string>
+    <string name="cd_seek_bar">Seek bar</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_playback">Playback</string>
+    <string name="notification_channel_downloads">Downloads</string>
+</resources>

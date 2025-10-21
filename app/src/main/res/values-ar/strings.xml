@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">مشغل وسائط القرآن</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_reciters">القراء</string>
+    <string name="nav_surahs">السور</string>
+    <string name="nav_bookmarks">الإشارات المرجعية</string>
+    <string name="nav_downloads">التنزيلات</string>
+
+    <!-- Player -->
+    <string name="play">تشغيل</string>
+    <string name="pause">إيقاف مؤقت</string>
+    <string name="next_ayah">الآية التالية</string>
+    <string name="previous_ayah">الآية السابقة</string>
+    <string name="loop_toggle">تكرار</string>
+    <string name="speed_control">السرعة</string>
+    <string name="sleep_timer">مؤقت السكون</string>
+
+    <!-- Seeking -->
+    <string name="seek_forward">التقديم</string>
+    <string name="seek_backward">الترجيع</string>
+    <string name="nudge_forward_small">+٢٥٠ ميلي ثانية</string>
+    <string name="nudge_backward_small">-٢٥٠ ميلي ثانية</string>
+    <string name="nudge_forward_large">+١ ثانية</string>
+    <string name="nudge_backward_large">-١ ثانية</string>
+
+    <!-- Content descriptions for accessibility -->
+    <string name="cd_play_pause">تشغيل أو إيقاف مؤقت</string>
+    <string name="cd_next">الآية التالية</string>
+    <string name="cd_previous">الآية السابقة</string>
+    <string name="cd_seek_bar">شريط البحث</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_playback">التشغيل</string>
+    <string name="notification_channel_downloads">التنزيلات</string>
+</resources>
