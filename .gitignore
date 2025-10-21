@@ -62,3 +62,8 @@ Thumbs.db
 build_log.txt
 log.txt
 nul
+
+# Audio files (too large for git)
+*.mp3
+quran_mp3/
+quran_data/
