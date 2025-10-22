@@ -33,6 +33,9 @@ interface ReciterDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReciters(reciters: List<ReciterEntity>)
 
+    @Query("DELETE FROM reciters WHERE id = :reciterId")
+    suspend fun deleteReciterById(reciterId: String)
+
     @Query("DELETE FROM reciters")
     suspend fun deleteAllReciters()
 }

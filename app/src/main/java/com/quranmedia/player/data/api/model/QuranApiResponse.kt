@@ -108,3 +108,50 @@ data class EditionData(
     @SerializedName("type")
     val type: String?                // e.g., "versebyverse"
 )
+
+/**
+ * Search response
+ */
+data class SearchResponse(
+    @SerializedName("code")
+    val code: Int,
+    @SerializedName("status")
+    val status: String,
+    @SerializedName("data")
+    val data: SearchData
+)
+
+data class SearchData(
+    @SerializedName("count")
+    val count: Int,
+    @SerializedName("matches")
+    val matches: List<SearchMatch>
+)
+
+data class SearchMatch(
+    @SerializedName("number")
+    val number: Int,              // Global ayah number
+    @SerializedName("text")
+    val text: String,             // Arabic text with search term highlighted
+    @SerializedName("edition")
+    val edition: String,
+    @SerializedName("surah")
+    val surah: SurahInfo,
+    @SerializedName("numberInSurah")
+    val numberInSurah: Int
+)
+
+data class SurahInfo(
+    @SerializedName("number")
+    val number: Int,
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("englishName")
+    val englishName: String,
+    @SerializedName("englishNameTranslation")
+    val englishNameTranslation: String,
+    @SerializedName("revelationType")
+    val revelationType: String,
+    @SerializedName("numberOfAyahs")
+    val numberOfAyahs: Int
+)

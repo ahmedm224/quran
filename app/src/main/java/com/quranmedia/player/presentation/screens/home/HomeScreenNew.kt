@@ -34,7 +34,10 @@ fun HomeScreenNew(
     viewModel: HomeViewModel = hiltViewModel(),
     onNavigateToReciters: () -> Unit,
     onNavigateToSurahs: () -> Unit,
-    onNavigateToPlayer: (String, Int, Boolean) -> Unit
+    onNavigateToPlayer: (String, Int, Boolean) -> Unit,
+    onNavigateToBookmarks: () -> Unit = {},
+    onNavigateToSearch: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {}
 ) {
     val lastPlaybackInfo by viewModel.lastPlaybackInfo.collectAsState()
 
@@ -56,15 +59,24 @@ fun HomeScreenNew(
                 title = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "مشغل القرآن الكريم",
+                            text = "الفرقان",
                             style = MaterialTheme.typography.titleLarge,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Quran Media Player",
+                            text = "Alfurqan",
                             style = MaterialTheme.typography.bodyMedium,
                             fontSize = 14.sp
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onNavigateToAbout) {
+                        Icon(
+                            Icons.Default.Info,
+                            contentDescription = "About",
+                            tint = Color.White
                         )
                     }
                 },
@@ -303,7 +315,7 @@ fun HomeScreenNew(
                         icon = Icons.Default.Bookmark,
                         backgroundColor = Color(0xFFFFE082).copy(alpha = 0.3f),
                         iconColor = Color(0xFFF57C00),
-                        onClick = { /* TODO */ },
+                        onClick = onNavigateToBookmarks,
                         modifier = Modifier.weight(1f)
                     )
                     IslamicActionCard(

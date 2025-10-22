@@ -31,6 +31,28 @@ class ReciterDataPopulatorWorker @AssistedInject constructor(
         return try {
             Timber.d("Starting reciter data population from API")
 
+            // List of reciters to exclude
+            val excludedReciters = setOf(
+                "ar.abdurrahmaansudais",
+                "ar.ahmedajamy",
+                "ar.alafasy",
+                "zh.chinese",
+                "fa.hedayatfarfooladvand",
+                "ru.kuliev",
+                "en.walk",
+                "ur.khan"
+            )
+
+            // Delete excluded reciters if they exist
+            for (excludedId in excludedReciters) {
+                try {
+                    reciterDao.deleteReciterById(excludedId)
+                    Timber.d("Deleted excluded reciter: $excludedId")
+                } catch (e: Exception) {
+                    Timber.w(e, "Could not delete reciter: $excludedId")
+                }
+            }
+
             // Check if reciters already exist
             val existingReciterCount = reciterDao.getReciterCount()
             if (existingReciterCount > 0) {
@@ -54,6 +76,11 @@ class ReciterDataPopulatorWorker @AssistedInject constructor(
             // Process each audio edition
             for (edition in response.data) {
                 try {
+                    // Skip excluded reciters
+                    if (excludedReciters.any { edition.identifier.contains(it, ignoreCase = true) }) {
+                        Timber.d("Skipping excluded reciter: ${edition.identifier}")
+                        continue
+                    }
                     // Insert reciter
                     val reciterEntity = ReciterEntity(
                         id = edition.identifier,

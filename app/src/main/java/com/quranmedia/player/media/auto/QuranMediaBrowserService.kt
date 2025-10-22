@@ -23,6 +23,9 @@ class QuranMediaBrowserService : MediaBrowserServiceCompat() {
     lateinit var quranRepository: QuranRepository
 
     @Inject
+    lateinit var bookmarkRepository: com.quranmedia.player.data.repository.BookmarkRepository
+
+    @Inject
     lateinit var coroutineScope: CoroutineScope
 
     companion object {
@@ -138,6 +141,7 @@ class QuranMediaBrowserService : MediaBrowserServiceCompat() {
                     parentId == MEDIA_ROOT_ID -> getRootItems()
                     parentId == MEDIA_RECITERS_ID -> getRecitersItems()
                     parentId == MEDIA_SURAHS_ID -> getSurahsItems()
+                    parentId == MEDIA_BOOKMARKS_ID -> getBookmarksItems()
                     parentId.startsWith(MEDIA_RECITER_PREFIX) -> {
                         val reciterId = parentId.removePrefix(MEDIA_RECITER_PREFIX)
                         getReciterSurahsItems(reciterId)
@@ -231,6 +235,43 @@ class QuranMediaBrowserService : MediaBrowserServiceCompat() {
                     .build(),
                 MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
             )
+        }
+    }
+
+    private suspend fun getBookmarksItems(): List<MediaBrowserCompat.MediaItem> {
+        val bookmarks = bookmarkRepository.getAllBookmarks().first()
+
+        Timber.d("Loading ${bookmarks.size} bookmarks for Android Auto")
+
+        return bookmarks.mapNotNull { bookmark ->
+            try {
+                val surah = quranRepository.getSurahByNumber(bookmark.surahNumber)
+                val reciter = quranRepository.getReciterById(bookmark.reciterId)
+                val audioVariant = quranRepository.getAudioVariant(bookmark.reciterId, bookmark.surahNumber)
+                val audioUrl = audioVariant?.url ?: buildAudioUrl(bookmark.reciterId, bookmark.surahNumber)
+
+                if (surah != null && reciter != null) {
+                    val label = bookmark.label ?: "Ayah ${bookmark.ayahNumber}"
+                    val title = "${surah.nameEnglish} - $label"
+                    val subtitle = "${surah.nameArabic} - ${reciter.name}"
+
+                    MediaBrowserCompat.MediaItem(
+                        MediaDescriptionCompat.Builder()
+                            .setMediaId("$MEDIA_RECITER_PREFIX${bookmark.reciterId}:$MEDIA_SURAH_PREFIX${bookmark.surahNumber}")
+                            .setTitle(title)
+                            .setSubtitle(subtitle)
+                            .setMediaUri(Uri.parse(audioUrl))
+                            .build(),
+                        MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
+                    )
+                } else {
+                    Timber.w("Could not load bookmark: surah or reciter not found")
+                    null
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error loading bookmark")
+                null
+            }
         }
     }
 

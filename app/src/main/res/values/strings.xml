@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Quran Media Player</string>
+    <string name="app_name">Alfurqan</string>
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>
@@ -35,4 +35,19 @@
     <!-- Notifications -->
     <string name="notification_channel_playback">Playback</string>
     <string name="notification_channel_downloads">Downloads</string>
+
+    <!-- Bookmarks -->
+    <string name="bookmark_position">Bookmark This Position</string>
+    <string name="bookmark_saved">Bookmark Saved!</string>
+    <string name="bookmarks_title">Bookmarks</string>
+    <string name="bookmarks_empty">No bookmarks yet</string>
+    <string name="bookmarks_empty_message">Bookmarks you create will appear here</string>
+    <string name="delete_bookmark">Delete Bookmark</string>
+    <string name="delete_bookmark_confirm">Are you sure you want to delete this bookmark?</string>
+    <string name="delete_all_bookmarks">Delete All Bookmarks</string>
+    <string name="delete_all_bookmarks_confirm">Are you sure you want to delete all %d bookmarks? This action cannot be undone.</string>
+    <string name="delete">Delete</string>
+    <string name="delete_all">Delete All</string>
+    <string name="cancel">Cancel</string>
+    <string name="back">Back</string>
 </resources>

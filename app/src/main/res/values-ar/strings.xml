@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">مشغل وسائط القرآن</string>
+    <string name="app_name">الفرقان</string>
 
     <!-- Navigation -->
     <string name="nav_home">الرئيسية</string>
@@ -35,4 +35,19 @@
     <!-- Notifications -->
     <string name="notification_channel_playback">التشغيل</string>
     <string name="notification_channel_downloads">التنزيلات</string>
+
+    <!-- Bookmarks -->
+    <string name="bookmark_position">حفظ هذا الموضع</string>
+    <string name="bookmark_saved">تم الحفظ!</string>
+    <string name="bookmarks_title">الإشارات المرجعية</string>
+    <string name="bookmarks_empty">لا توجد إشارات مرجعية بعد</string>
+    <string name="bookmarks_empty_message">ستظهر الإشارات المرجعية التي تنشئها هنا</string>
+    <string name="delete_bookmark">حذف الإشارة المرجعية</string>
+    <string name="delete_bookmark_confirm">هل أنت متأكد من حذف هذه الإشارة المرجعية؟</string>
+    <string name="delete_all_bookmarks">حذف جميع الإشارات المرجعية</string>
+    <string name="delete_all_bookmarks_confirm">هل أنت متأكد من حذف جميع الإشارات المرجعية (%d)؟ لا يمكن التراجع عن هذا الإجراء.</string>
+    <string name="delete">حذف</string>
+    <string name="delete_all">حذف الكل</string>
+    <string name="cancel">إلغاء</string>
+    <string name="back">رجوع</string>
 </resources>

@@ -48,4 +48,7 @@ interface AyahDao {
 
     @Query("SELECT * FROM ayahs ORDER BY globalAyahNumber ASC")
     fun getAllAyahs(): Flow<List<AyahEntity>>
+
+    @Query("SELECT * FROM ayahs WHERE textArabic LIKE '%' || :query || '%' ORDER BY globalAyahNumber ASC")
+    suspend fun searchAyahs(query: String): List<AyahEntity>
 }

@@ -19,6 +19,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -28,6 +29,12 @@ class QuranMediaService : MediaSessionService() {
 
     @Inject
     lateinit var quranPlayer: QuranPlayer
+
+    @Inject
+    lateinit var playbackController: com.quranmedia.player.media.controller.PlaybackController
+
+    @Inject
+    lateinit var quranRepository: com.quranmedia.player.domain.repository.QuranRepository
 
     private var mediaSession: MediaSession? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -176,6 +183,30 @@ class QuranMediaService : MediaSessionService() {
                         }
 
                         if (surahNumber != null && reciterId != null) {
+                            // IMPORTANT: Initialize PlaybackController with ayah tracking
+                            serviceScope.launch {
+                                try {
+                                    val surah = quranRepository.getSurahByNumber(surahNumber)
+                                    val reciter = quranRepository.getReciterById(reciterId)
+                                    val audioVariants = quranRepository.getAudioVariants(reciterId, surahNumber).first()
+
+                                    if (surah != null && reciter != null && audioVariants.isNotEmpty()) {
+                                        val audioUrl = audioVariants.first().url
+                                        Timber.d("Initializing PlaybackController for Android Auto: $reciterId, surah $surahNumber")
+                                        playbackController.playAudio(
+                                            reciterId = reciterId,
+                                            surahNumber = surahNumber,
+                                            audioUrl = audioUrl,
+                                            surahNameArabic = surah.nameArabic,
+                                            surahNameEnglish = surah.nameEnglish,
+                                            reciterName = reciter.name
+                                        )
+                                    }
+                                } catch (e: Exception) {
+                                    Timber.e(e, "Error initializing playback from Android Auto")
+                                }
+                            }
+
                             val audioUrl = "https://cdn.islamic.network/quran/audio-surah/128/$reciterId/$surahNumber.mp3"
                             Timber.d("Building MediaItem for $mediaId with URI: $audioUrl")
 

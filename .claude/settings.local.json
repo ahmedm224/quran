@@ -58,7 +58,12 @@
       "Bash(findstr /I \"MediaBrowser gearhead Auto onPlay\")",
       "Bash(cmd.exe /c \"findstr /I /C:\"\"MediaBrowser\"\" /C:\"\"gearhead\"\" /C:\"\"onPlay\"\" D:\\Dev\\Apps\\quran_media\\log.txt | tail -n 50\")",
       "Bash(cmd.exe /c \"powershell -Command \"\"Get-Content ''D:\\Dev\\Apps\\quran_media\\log.txt'' -Tail 200 | Select-String -Pattern ''MediaBrowser|onPlay|gearhead|QuranMediaService|ExoPlayer|Loading audio'' -Context 2,2\"\"\")",
-      "Bash(cmd.exe /c \"timeout /t 60\")"
+      "Bash(cmd.exe /c \"timeout /t 60\")",
+      "Bash(cmd.exe /c \"cd /d D:\\Dev\\Apps\\quran_media && gradlew.bat assembleDebug --console=plain 2>&1\")",
+      "Bash(curl -s \"https://api.alquran.cloud/v1/search/الله/1/quran-simple-enhanced\")",
+      "Bash(curl -s \"https://api.alquran.cloud/v1/search/الله/all\")",
+      "Bash(curl -s \"https://api.alquran.cloud/v1/search/الله/quran-simple\")",
+      "Bash(curl -s \"https://api.alquran.cloud/v1/search/الله\")"
     ],
     "deny": [],
     "ask": []

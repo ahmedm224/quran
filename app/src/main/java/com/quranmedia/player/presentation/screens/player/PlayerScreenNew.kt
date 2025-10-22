@@ -1,6 +1,8 @@
 package com.quranmedia.player.presentation.screens.player
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,27 +16,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun PlayerScreenNew(
     reciterId: String,
     surahNumber: Int,
     resumeFromSaved: Boolean = false,
+    startFromAyah: Int? = null,
     viewModel: PlayerViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
     val playbackState by viewModel.playbackState.collectAsState()
+    val bookmarkSaved by viewModel.bookmarkSaved.collectAsState()
 
-    LaunchedEffect(reciterId, surahNumber) {
+    LaunchedEffect(reciterId, surahNumber, startFromAyah) {
         val resumePosition = if (resumeFromSaved) {
             viewModel.getSavedPosition(reciterId, surahNumber)
         } else null
 
-        viewModel.loadAudio(reciterId, surahNumber, resumePosition)
+        viewModel.loadAudio(reciterId, surahNumber, resumePosition, startFromAyah)
     }
 
     // Islamic green theme colors
@@ -49,7 +54,7 @@ fun PlayerScreenNew(
                 title = {
                     Column {
                         Text(
-                            text = playbackState.currentSurahNameEnglish ?: "Quran Player",
+                            text = playbackState.currentSurahNameEnglish ?: "Alfurqan",
                             style = MaterialTheme.typography.titleMedium
                         )
                         playbackState.currentSurahNameArabic?.let {
@@ -134,23 +139,53 @@ fun PlayerScreenNew(
 
                         val lineHeight = fontSize * 1.6f
 
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 280.dp)  // Constrain height to prevent button jumping
-                                .verticalScroll(rememberScrollState())
-                                .padding(vertical = 20.dp, horizontal = 16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = ayahText,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontSize = fontSize,
-                                lineHeight = lineHeight,
-                                textAlign = TextAlign.Center,
-                                color = Color.Black,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                        // For very long ayahs, use single-line marquee instead of multiline
+                        if (textLength > 300) {
+                            // Single line with auto-scrolling marquee for long ayahs
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 20.dp, horizontal = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = ayahText,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontSize = fontSize,
+                                    textAlign = TextAlign.Center,
+                                    color = Color.Black,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .basicMarquee(
+                                            iterations = Int.MAX_VALUE,
+                                            delayMillis = 1000,
+                                            initialDelayMillis = 2000,
+                                            velocity = 30.dp
+                                        )
+                                )
+                            }
+                        } else {
+                            // Multiline scrollable for shorter ayahs
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 280.dp)
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(vertical = 20.dp, horizontal = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = ayahText,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontSize = fontSize,
+                                    lineHeight = lineHeight,
+                                    textAlign = TextAlign.Center,
+                                    color = Color.Black,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
                     } else {
                         CircularProgressIndicator(
@@ -321,6 +356,28 @@ fun PlayerScreenNew(
                             Spacer(modifier = Modifier.width(4.dp))
                             Icon(Icons.Default.FastForward, null, modifier = Modifier.size(16.dp))
                         }
+                    }
+
+                    // Bookmark button
+                    Button(
+                        onClick = { viewModel.createBookmark() },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (bookmarkSaved) lightGreen else goldAccent.copy(alpha = 0.2f),
+                            contentColor = if (bookmarkSaved) Color.White else Color(0xFFF57C00)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(
+                            if (bookmarkSaved) Icons.Default.Check else Icons.Default.Bookmark,
+                            contentDescription = if (bookmarkSaved) "Bookmark saved" else "Add bookmark",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (bookmarkSaved) "Bookmark Saved!" else "Bookmark This Position",
+                            fontSize = 14.sp
+                        )
                     }
                 }
             }

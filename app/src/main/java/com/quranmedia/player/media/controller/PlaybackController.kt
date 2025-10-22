@@ -1,5 +1,6 @@
 package com.quranmedia.player.media.controller
 
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import androidx.media3.common.MediaItem
@@ -13,6 +14,7 @@ import com.quranmedia.player.domain.model.AyahIndex
 import com.quranmedia.player.domain.repository.QuranRepository
 import com.quranmedia.player.media.model.PlaybackState
 import com.quranmedia.player.media.service.QuranMediaService
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -28,6 +30,7 @@ import javax.inject.Singleton
 
 @Singleton
 class PlaybackController @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val mediaControllerFuture: ListenableFuture<MediaController>,
     private val quranRepository: QuranRepository,
     private val settingsRepository: SettingsRepository,
@@ -39,6 +42,27 @@ class PlaybackController @Inject constructor(
     private var mediaController: MediaController? = null
     private var positionUpdateJob: Job? = null
     private var ayahIndices: List<AyahIndex> = emptyList()
+
+    // App icon URI for artwork
+    private val appIconUri: Uri by lazy {
+        // Try to get the launcher icon resource ID
+        val resourceId = try {
+            context.packageManager.getApplicationInfo(context.packageName, 0).icon
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to get app icon resource ID")
+            0
+        }
+
+        val uri = if (resourceId != 0) {
+            Uri.parse("android.resource://${context.packageName}/$resourceId")
+        } else {
+            // Fallback to a well-known resource path
+            Uri.parse("android.resource://${context.packageName}/${android.R.drawable.ic_media_play}")
+        }
+
+        Timber.d("App icon URI for artwork: $uri")
+        uri
+    }
 
     init {
         mediaControllerFuture.addListener({
@@ -242,6 +266,7 @@ class PlaybackController @Inject constructor(
                             .setAlbumTitle("$surahNameEnglish - $surahNameArabic")
                             .setDisplayTitle("Ayah ${ayah.numberInSurah}")
                             .setSubtitle("$surahNameEnglish (${ayah.numberInSurah}/${ayahs.size})")
+                            .setArtworkUri(appIconUri)  // App icon as artwork
                             .setExtras(Bundle().apply {
                                 putString("surahNameArabic", surahNameArabic)
                                 putString("surahNameEnglish", surahNameEnglish)
@@ -328,6 +353,7 @@ class PlaybackController @Inject constructor(
                     .setArtist(reciterName)
                     .setAlbumTitle("Quran")
                     .setDisplayTitle(surahNameEnglish)
+                    .setArtworkUri(appIconUri)  // App icon as artwork
                     .build()
             )
             .build()

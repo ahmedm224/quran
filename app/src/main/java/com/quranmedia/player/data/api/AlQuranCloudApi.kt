@@ -22,19 +22,19 @@ interface AlQuranCloudApi {
     /**
      * Get a specific Surah with all its Ayahs
      * @param surahNumber Surah number (1-114)
-     * @param edition Quran edition identifier (default: quran-uthmani)
+     * @param edition Quran edition identifier (default: quran-simple-enhanced)
      */
     @GET("surah/{number}/{edition}")
     suspend fun getSurah(
         @Path("number") surahNumber: Int,
-        @Path("edition") edition: String = "quran-uthmani"
+        @Path("edition") edition: String = "quran-simple-enhanced"
     ): SurahResponse
 
     /**
-     * Get a specific Surah with default edition (quran-uthmani)
+     * Get a specific Surah with default edition (quran-simple-enhanced)
      * @param surahNumber Surah number (1-114)
      */
-    @GET("surah/{number}")
+    @GET("surah/{number}/quran-simple-enhanced")
     suspend fun getSurahDefault(
         @Path("number") surahNumber: Int
     ): SurahResponse
@@ -45,10 +45,35 @@ interface AlQuranCloudApi {
     @GET("edition/format/audio")
     suspend fun getAudioEditions(): EditionsResponse
 
+    /**
+     * Search for ayahs containing specific text
+     * @param query Search text (Arabic)
+     * @param surah Optional surah number to limit search (1-114)
+     * @param edition Edition identifier (default: quran-simple-enhanced)
+     */
+    @GET("search/{query}/{surah}/{edition}")
+    suspend fun searchInSurah(
+        @Path("query") query: String,
+        @Path("surah") surah: Int,
+        @Path("edition") edition: String = "quran-simple-enhanced"
+    ): com.quranmedia.player.data.api.model.SearchResponse
+
+    /**
+     * Search for ayahs containing specific text across all Quran
+     * @param query Search text (Arabic)
+     * @param edition Edition identifier (default: quran-simple-enhanced)
+     */
+    @GET("search/{query}/all/{edition}")
+    suspend fun searchAll(
+        @Path("query") query: String,
+        @Path("edition") edition: String = "quran-simple-enhanced"
+    ): com.quranmedia.player.data.api.model.SearchResponse
+
     companion object {
         const val BASE_URL = "https://api.alquran.cloud/v1/"
 
         // Available editions
+        const val EDITION_SIMPLE_ENHANCED = "quran-simple-enhanced"
         const val EDITION_UTHMANI = "quran-uthmani"
         const val EDITION_UTHMANI_QURAN_ACADEMY = "quran-uthmani-quran-academy"
         const val EDITION_SIMPLE = "quran-simple"
