@@ -21,7 +21,8 @@ class PlayerViewModel @Inject constructor(
     private val playbackController: PlaybackController,
     private val quranRepository: QuranRepository,
     private val settingsRepository: SettingsRepository,
-    private val bookmarkRepository: BookmarkRepository
+    private val bookmarkRepository: BookmarkRepository,
+    private val downloadManager: com.quranmedia.player.download.DownloadManager
 ) : ViewModel() {
 
     val playbackState = playbackController.playbackState
@@ -30,6 +31,9 @@ class PlayerViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = playbackController.playbackState.value
         )
+
+    private val _downloadState = MutableStateFlow<DownloadButtonState>(DownloadButtonState.NotDownloaded)
+    val downloadState = _downloadState.asStateFlow()
 
     suspend fun getSavedPosition(reciterId: String, surahNumber: Int): Long? {
         return try {
@@ -159,8 +163,86 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
+    fun downloadCurrentSurah() {
+        viewModelScope.launch {
+            try {
+                val state = playbackState.value
+                val reciterId = state.currentReciter
+                val surahNumber = state.currentSurah
+
+                if (reciterId != null && surahNumber != null) {
+                    _downloadState.value = DownloadButtonState.Downloading
+
+                    val audioVariantEntities = quranRepository.getAudioVariants(reciterId, surahNumber).first()
+                    if (audioVariantEntities.isNotEmpty()) {
+                        val entity = audioVariantEntities.first()
+                        val formatString = entity.format.toString().uppercase()
+                        val audioFormat = when (formatString) {
+                            "MP3" -> com.quranmedia.player.domain.model.AudioFormat.MP3
+                            "FLAC" -> com.quranmedia.player.domain.model.AudioFormat.FLAC
+                            "M4A" -> com.quranmedia.player.domain.model.AudioFormat.M4A
+                            else -> com.quranmedia.player.domain.model.AudioFormat.MP3
+                        }
+
+                        val audioVariant = com.quranmedia.player.domain.model.AudioVariant(
+                            id = entity.id,
+                            reciterId = entity.reciterId,
+                            surahNumber = entity.surahNumber,
+                            bitrate = entity.bitrate,
+                            format = audioFormat,
+                            url = entity.url,
+                            localPath = entity.localPath,
+                            durationMs = entity.durationMs,
+                            fileSizeBytes = entity.fileSizeBytes,
+                            hash = entity.hash
+                        )
+                        downloadManager.downloadAudio(reciterId, surahNumber, audioVariant)
+
+                        _downloadState.value = DownloadButtonState.Downloaded
+                        Timber.d("Download started for surah $surahNumber")
+                    } else {
+                        _downloadState.value = DownloadButtonState.NotDownloaded
+                        Timber.e("No audio variant found for download")
+                    }
+                } else {
+                    Timber.e("Cannot download: missing playback state")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error downloading surah")
+                _downloadState.value = DownloadButtonState.NotDownloaded
+            }
+        }
+    }
+
+    fun checkDownloadStatus(reciterId: String, surahNumber: Int) {
+        viewModelScope.launch {
+            try {
+                // Check if this surah is already downloaded
+                val downloadTask = downloadManager.getAllDownloads().first()
+                    .firstOrNull { it.reciterId == reciterId && it.surahNumber == surahNumber }
+
+                _downloadState.value = when {
+                    downloadTask == null -> DownloadButtonState.NotDownloaded
+                    downloadTask.status == com.quranmedia.player.data.database.entity.DownloadStatus.COMPLETED.name ->
+                        DownloadButtonState.Downloaded
+                    downloadTask.status == com.quranmedia.player.data.database.entity.DownloadStatus.IN_PROGRESS.name ->
+                        DownloadButtonState.Downloading
+                    else -> DownloadButtonState.NotDownloaded
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error checking download status")
+            }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         Timber.d("PlayerViewModel cleared")
     }
+}
+
+sealed class DownloadButtonState {
+    object NotDownloaded : DownloadButtonState()
+    object Downloading : DownloadButtonState()
+    object Downloaded : DownloadButtonState()
 }

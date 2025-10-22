@@ -261,10 +261,10 @@ class PlaybackController @Inject constructor(
                     .setUri(Uri.parse(ayahAudioUrl))
                     .setMediaMetadata(
                         MediaMetadata.Builder()
-                            .setTitle(ayah.text)  // Arabic ayah text
+                            .setTitle(ayah.text)  // Arabic ayah text - will scroll in notifications and Android Auto
                             .setArtist(reciterName)
                             .setAlbumTitle("$surahNameEnglish - $surahNameArabic")
-                            .setDisplayTitle("Ayah ${ayah.numberInSurah}")
+                            .setDisplayTitle(ayah.text)  // CRITICAL: Display title for Android Auto scrolling
                             .setSubtitle("$surahNameEnglish (${ayah.numberInSurah}/${ayahs.size})")
                             .setArtworkUri(appIconUri)  // App icon as artwork
                             .setExtras(Bundle().apply {
@@ -272,6 +272,7 @@ class PlaybackController @Inject constructor(
                                 putString("surahNameEnglish", surahNameEnglish)
                                 putInt("ayahNumber", ayah.numberInSurah)
                                 putInt("totalAyahs", ayahs.size)
+                                putString("ayahText", ayah.text)  // Store full ayah text for reference
                             })
                             .build()
                     )

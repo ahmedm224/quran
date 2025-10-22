@@ -28,6 +28,8 @@ class QuranMediaBrowserService : MediaBrowserServiceCompat() {
     @Inject
     lateinit var coroutineScope: CoroutineScope
 
+    private var lastMetadataMediaId: String? = null
+
     companion object {
         const val MEDIA_ROOT_ID = "root"
         const val MEDIA_RECITERS_ID = "reciters"
@@ -324,15 +326,38 @@ class QuranMediaBrowserService : MediaBrowserServiceCompat() {
     ) {
         val currentMediaItem = controller.currentMediaItem
         if (currentMediaItem != null) {
+            // Skip if this is the same media item we just updated
+            if (currentMediaItem.mediaId == lastMetadataMediaId) {
+                Timber.d("Skipping duplicate metadata update for mediaId: ${currentMediaItem.mediaId}")
+                return
+            }
+
             val metadata = currentMediaItem.mediaMetadata
+            val title = metadata.title?.toString() ?: ""
+            val displayTitle = metadata.displayTitle?.toString() ?: title
+            val artist = metadata.artist?.toString() ?: ""
+            val subtitle = metadata.subtitle?.toString() ?: ""
+
             val metadataBuilder = android.support.v4.media.MediaMetadataCompat.Builder()
                 .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID, currentMediaItem.mediaId)
-                .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_TITLE, metadata.title?.toString() ?: "")
-                .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ARTIST, metadata.artist?.toString() ?: "")
+                .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_TITLE, displayTitle)  // Use displayTitle as primary title
+                .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, displayTitle)  // CRITICAL for Android Auto scrolling
+                .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
+                .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, subtitle)
+                .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ALBUM, metadata.albumTitle?.toString() ?: "")
+                .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION, title)  // Full ayah text as description
                 .putLong(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DURATION, controller.duration)
 
+            // Add artwork if available
+            metadata.artworkUri?.let { uri ->
+                metadataBuilder.putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ART_URI, uri.toString())
+                metadataBuilder.putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, uri.toString())
+                metadataBuilder.putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, uri.toString())
+            }
+
             sessionCompat.setMetadata(metadataBuilder.build())
-            Timber.d("Updated compat metadata: ${metadata.title}")
+            lastMetadataMediaId = currentMediaItem.mediaId
+            Timber.d("Updated compat metadata - title: ${displayTitle.take(50)}..., artist: $artist, length: ${displayTitle.length} chars")
         }
     }
 

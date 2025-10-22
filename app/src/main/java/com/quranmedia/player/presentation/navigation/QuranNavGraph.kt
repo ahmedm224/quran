@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.quranmedia.player.presentation.screens.about.AboutScreen
 import com.quranmedia.player.presentation.screens.bookmarks.BookmarksScreen
+import com.quranmedia.player.presentation.screens.downloads.DownloadsScreen
 import com.quranmedia.player.presentation.screens.home.HomeScreenNew
 import com.quranmedia.player.presentation.screens.player.PlayerScreenNew
 import com.quranmedia.player.presentation.screens.reciters.RecitersScreenNew
@@ -32,29 +33,24 @@ fun QuranNavGraph(navController: NavHostController) {
                 },
                 onNavigateToBookmarks = { navController.navigate(Screen.Bookmarks.route) },
                 onNavigateToSearch = { navController.navigate(Screen.Search.route) },
-                onNavigateToAbout = { navController.navigate(Screen.About.route) }
+                onNavigateToAbout = { navController.navigate(Screen.About.route) },
+                onNavigateToDownloads = { navController.navigate(Screen.Downloads.route) }
             )
         }
 
         composable(Screen.Reciters.route) {
             RecitersScreenNew(
                 onReciterClick = { reciter ->
-                    navController.navigate(Screen.Surahs.createRoute(reciter.id))
+                    // Navigate to unified Surahs screen (reciter selection handled in that screen)
+                    navController.navigate(Screen.Surahs.route)
                 },
                 onBack = { navController.popBackStack() }
             )
         }
 
-        composable(
-            route = Screen.Surahs.route,
-            arguments = listOf(
-                navArgument("reciterId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val reciterId = backStackEntry.arguments?.getString("reciterId") ?: return@composable
-
+        composable(Screen.Surahs.route) {
             SurahsScreenNew(
-                onSurahClick = { surah ->
+                onSurahClick = { reciterId, surah ->
                     navController.navigate(Screen.Player.createRoute(reciterId, surah.number))
                 },
                 onBack = { navController.popBackStack() }
@@ -113,6 +109,12 @@ fun QuranNavGraph(navController: NavHostController) {
 
         composable(Screen.About.route) {
             AboutScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Downloads.route) {
+            DownloadsScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

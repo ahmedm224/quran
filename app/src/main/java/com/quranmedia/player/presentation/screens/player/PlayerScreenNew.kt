@@ -33,6 +33,7 @@ fun PlayerScreenNew(
 ) {
     val playbackState by viewModel.playbackState.collectAsState()
     val bookmarkSaved by viewModel.bookmarkSaved.collectAsState()
+    val downloadState by viewModel.downloadState.collectAsState()
 
     LaunchedEffect(reciterId, surahNumber, startFromAyah) {
         val resumePosition = if (resumeFromSaved) {
@@ -40,6 +41,7 @@ fun PlayerScreenNew(
         } else null
 
         viewModel.loadAudio(reciterId, surahNumber, resumePosition, startFromAyah)
+        viewModel.checkDownloadStatus(reciterId, surahNumber)
     }
 
     // Islamic green theme colors
@@ -68,13 +70,45 @@ fun PlayerScreenNew(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
+                    }
+                },
+                actions = {
+                    // Download button
+                    IconButton(
+                        onClick = { viewModel.downloadCurrentSurah() },
+                        enabled = downloadState !is DownloadButtonState.Downloading
+                    ) {
+                        when (downloadState) {
+                            is DownloadButtonState.NotDownloaded -> {
+                                Icon(
+                                    Icons.Default.CloudDownload,
+                                    contentDescription = "Download Surah",
+                                    tint = Color.White
+                                )
+                            }
+                            is DownloadButtonState.Downloading -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                            is DownloadButtonState.Downloaded -> {
+                                Icon(
+                                    Icons.Default.CloudDone,
+                                    contentDescription = "Downloaded",
+                                    tint = goldAccent
+                                )
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = islamicGreen,
                     titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    navigationIconContentColor = Color.White,
+                    actionIconContentColor = Color.White
                 )
             )
         },

@@ -127,6 +127,46 @@ fun AboutScreen(
                 backgroundColor = lightGreen.copy(alpha = 0.2f)
             )
 
+            // Privacy & Legal
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Privacy & Data Protection",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "This app does NOT collect any personal information. All data is stored locally on your device and never transmitted to external servers.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 20.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "✓ No user accounts\n✓ No tracking or analytics\n✓ No data collection\n✓ GDPR & CCPA compliant",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = islamicGreen,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 20.sp
+                    )
+                }
+            }
+
             // Copyright Notice
             Card(
                 modifier = Modifier.fillMaxWidth(),

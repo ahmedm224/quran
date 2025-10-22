@@ -9,12 +9,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.quranmedia.player.domain.model.Reciter
 import com.quranmedia.player.domain.model.RevelationType
 import com.quranmedia.player.domain.model.Surah
 
@@ -30,10 +30,20 @@ import com.quranmedia.player.domain.model.Surah
 @Composable
 fun SurahsScreenNew(
     viewModel: SurahsViewModel = hiltViewModel(),
-    onSurahClick: (Surah) -> Unit,
+    onSurahClick: (reciterId: String, surah: Surah) -> Unit,
     onBack: () -> Unit
 ) {
     val surahs by viewModel.surahs.collectAsState()
+    val reciters by viewModel.reciters.collectAsState()
+    val selectedReciter by viewModel.selectedReciter.collectAsState()
+    var reciterDropdownExpanded by remember { mutableStateOf(false) }
+
+    // Auto-select first reciter if none selected
+    LaunchedEffect(reciters, selectedReciter) {
+        if (selectedReciter == null && reciters.isNotEmpty()) {
+            viewModel.selectReciter(reciters[0])
+        }
+    }
 
     // Islamic green theme colors
     val islamicGreen = Color(0xFF2E7D32)
@@ -103,11 +113,95 @@ fun SurahsScreenNew(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
+                // Reciter Selector Dropdown
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = islamicGreen.copy(alpha = 0.1f)
+                    )
+                ) {
+                    ExposedDropdownMenuBox(
+                        expanded = reciterDropdownExpanded,
+                        onExpandedChange = { reciterDropdownExpanded = it },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = selectedReciter?.name ?: "Select Reciter",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = {
+                                Column {
+                                    Text("القارئ", fontSize = 12.sp)
+                                    Text("Reciter", fontSize = 10.sp)
+                                }
+                            },
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    contentDescription = "Select Reciter",
+                                    tint = islamicGreen
+                                )
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = islamicGreen,
+                                unfocusedBorderColor = islamicGreen.copy(alpha = 0.5f),
+                                focusedLabelColor = islamicGreen,
+                                unfocusedLabelColor = darkGreen
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                                .padding(16.dp)
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = reciterDropdownExpanded,
+                            onDismissRequest = { reciterDropdownExpanded = false }
+                        ) {
+                            reciters.forEach { reciter ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Column {
+                                            Text(
+                                                text = reciter.name,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color.Black
+                                            )
+                                            reciter.nameArabic?.let { arabicName ->
+                                                Text(
+                                                    text = arabicName,
+                                                    fontSize = 12.sp,
+                                                    color = Color.Gray
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        viewModel.selectReciter(reciter)
+                                        reciterDropdownExpanded = false
+                                    },
+                                    colors = MenuDefaults.itemColors(
+                                        textColor = Color.Black,
+                                        leadingIconColor = Color.Black,
+                                        trailingIconColor = Color.Black,
+                                        disabledTextColor = Color.Gray,
+                                        disabledLeadingIconColor = Color.Gray,
+                                        disabledTrailingIconColor = Color.Gray
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // Header card
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = lightGreen.copy(alpha = 0.2f)
@@ -152,7 +246,13 @@ fun SurahsScreenNew(
                     items(surahs) { surah ->
                         SurahItemNew(
                             surah = surah,
-                            onClick = { onSurahClick(surah) }
+                            onClick = {
+                                // Only allow clicking if a reciter is selected
+                                selectedReciter?.let { reciter ->
+                                    onSurahClick(reciter.id, surah)
+                                }
+                            },
+                            isEnabled = selectedReciter != null
                         )
                     }
                     // Bottom spacing
@@ -168,7 +268,8 @@ fun SurahsScreenNew(
 @Composable
 fun SurahItemNew(
     surah: Surah,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isEnabled: Boolean = true
 ) {
     val islamicGreen = Color(0xFF2E7D32)
     val lightGreen = Color(0xFF66BB6A)
@@ -178,10 +279,10 @@ fun SurahItemNew(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(enabled = isEnabled, onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = if (isEnabled) Color.White else Color.White.copy(alpha = 0.6f)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {

@@ -37,7 +37,8 @@ fun HomeScreenNew(
     onNavigateToPlayer: (String, Int, Boolean) -> Unit,
     onNavigateToBookmarks: () -> Unit = {},
     onNavigateToSearch: () -> Unit = {},
-    onNavigateToAbout: () -> Unit = {}
+    onNavigateToAbout: () -> Unit = {},
+    onNavigateToDownloads: () -> Unit = {}
 ) {
     val lastPlaybackInfo by viewModel.lastPlaybackInfo.collectAsState()
 
@@ -266,43 +267,41 @@ fun HomeScreenNew(
                 }
             }
 
-            // Quick Access Section
-            Text(
-                text = "Quick Access",
-                style = MaterialTheme.typography.titleLarge,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = darkGreen
-            )
+            // Main Menu Section
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "القائمة الرئيسية",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = darkGreen
+                )
+                Text(
+                    text = "Main Menu",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+            }
 
             // Main Action Cards in Grid
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Row 1: Reciters and Surahs
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    IslamicActionCard(
-                        title = "القراء",
-                        subtitle = "Reciters",
-                        icon = Icons.Default.Person,
-                        backgroundColor = lightGreen.copy(alpha = 0.15f),
-                        iconColor = islamicGreen,
-                        onClick = onNavigateToReciters,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IslamicActionCard(
-                        title = "السور",
-                        subtitle = "Surahs",
-                        icon = Icons.Default.LibraryMusic,
-                        backgroundColor = islamicGreen.copy(alpha = 0.15f),
-                        iconColor = darkGreen,
-                        onClick = onNavigateToSurahs,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+                // Row 1: Listen (Surahs) - Full width featured card
+                IslamicActionCard(
+                    title = "استمع للقرآن",
+                    subtitle = "Listen to Quran",
+                    icon = Icons.Default.LibraryMusic,
+                    backgroundColor = islamicGreen.copy(alpha = 0.15f),
+                    iconColor = darkGreen,
+                    onClick = onNavigateToSurahs,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 // Row 2: Bookmarks and Downloads
                 Row(
@@ -319,12 +318,12 @@ fun HomeScreenNew(
                         modifier = Modifier.weight(1f)
                     )
                     IslamicActionCard(
-                        title = "التحميلات",
+                        title = "التنزيلات",
                         subtitle = "Downloads",
                         icon = Icons.Default.Download,
                         backgroundColor = Color(0xFF81C784).copy(alpha = 0.3f),
                         iconColor = Color(0xFF388E3C),
-                        onClick = { /* TODO */ },
+                        onClick = onNavigateToDownloads,
                         modifier = Modifier.weight(1f)
                     )
                 }
