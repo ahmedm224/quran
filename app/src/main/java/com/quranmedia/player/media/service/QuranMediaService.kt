@@ -176,10 +176,10 @@ class QuranMediaService : MediaSessionService() {
                             reciterId = parts[0].removePrefix("reciter_")
                             surahNumber = parts[1].removePrefix("surah_").toIntOrNull()
                         } else if (mediaId.startsWith("surah_")) {
-                            // Format 2: Just surah number - use default reciter (ar.alafasy)
+                            // Format 2: Just surah number - use default reciter (ar.abdulbasitmurattal)
                             surahNumber = mediaId.removePrefix("surah_").toIntOrNull()
-                            reciterId = "ar.alafasy"
-                            Timber.d("Using default reciter ar.alafasy for mediaId: $mediaId")
+                            reciterId = "ar.abdulbasitmurattal"
+                            Timber.d("Using default reciter ar.abdulbasitmurattal for mediaId: $mediaId")
                         }
 
                         if (surahNumber != null && reciterId != null) {
