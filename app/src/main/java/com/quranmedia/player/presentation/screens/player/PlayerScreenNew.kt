@@ -3,6 +3,7 @@ package com.quranmedia.player.presentation.screens.player
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,8 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -57,14 +61,34 @@ fun PlayerScreenNew(
                     Column {
                         Text(
                             text = playbackState.currentSurahNameEnglish ?: "Alfurqan",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 16.sp
                         )
-                        playbackState.currentSurahNameArabic?.let {
-                            Text(
-                                text = it,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontSize = 18.sp
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            playbackState.currentSurahNameArabic?.let {
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 14.sp
+                                )
+                            }
+                            playbackState.currentReciterName?.let {
+                                Text(
+                                    text = "•",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 12.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
                 },
@@ -138,23 +162,91 @@ fun PlayerScreenNew(
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Ayah number indicator
-                    Surface(
-                        shape = RoundedCornerShape(24.dp),
-                        color = islamicGreen.copy(alpha = 0.1f),
-                        modifier = Modifier.padding(bottom = 16.dp)
+                    // Ayah selector dropdown
+                    var ayahDropdownExpanded by remember { mutableStateOf(false) }
+
+                    ExposedDropdownMenuBox(
+                        expanded = ayahDropdownExpanded,
+                        onExpandedChange = { ayahDropdownExpanded = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
                     ) {
-                        Text(
-                            text = if (playbackState.currentAyah != null && playbackState.totalAyahs != null) {
-                                "آية ${playbackState.currentAyah} من ${playbackState.totalAyahs}"
-                            } else {
-                                "جاري التحميل..."
-                            },
-                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = islamicGreen,
-                            fontSize = 16.sp
-                        )
+                        OutlinedCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                                .clickable { ayahDropdownExpanded = true },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.outlinedCardColors(
+                                containerColor = islamicGreen.copy(alpha = 0.05f)
+                            ),
+                            border = CardDefaults.outlinedCardBorder().copy(
+                                brush = androidx.compose.ui.graphics.SolidColor(islamicGreen.copy(alpha = 0.3f))
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (playbackState.currentAyah != null && playbackState.totalAyahs != null) {
+                                        "آية ${playbackState.currentAyah} من ${playbackState.totalAyahs}"
+                                    } else {
+                                        "جاري التحميل..."
+                                    },
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = islamicGreen,
+                                    fontSize = 16.sp
+                                )
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    contentDescription = "Select Ayah",
+                                    tint = islamicGreen
+                                )
+                            }
+                        }
+
+                        if (playbackState.totalAyahs != null && playbackState.totalAyahs!! > 0) {
+                            ExposedDropdownMenu(
+                                expanded = ayahDropdownExpanded,
+                                onDismissRequest = { ayahDropdownExpanded = false },
+                                modifier = Modifier
+                                    .heightIn(max = 300.dp)
+                                    .background(Color.White)
+                            ) {
+                                for (ayahNum in 1..playbackState.totalAyahs!!) {
+                                    val isCurrentAyah = ayahNum == playbackState.currentAyah
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                text = "آية $ayahNum",
+                                                style = MaterialTheme.typography.bodyLarge.copy(
+                                                    color = if (isCurrentAyah) Color.White else darkGreen,
+                                                    fontWeight = if (isCurrentAyah) FontWeight.Bold else FontWeight.Normal,
+                                                    fontSize = 16.sp
+                                                )
+                                            )
+                                        },
+                                        onClick = {
+                                            viewModel.seekToAyah(ayahNum)
+                                            ayahDropdownExpanded = false
+                                        },
+                                        colors = MenuDefaults.itemColors(
+                                            textColor = darkGreen,
+                                            leadingIconColor = darkGreen,
+                                            disabledTextColor = Color.Gray
+                                        ),
+                                        modifier = Modifier.background(
+                                            if (isCurrentAyah) islamicGreen else Color.Transparent
+                                        )
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     // Arabic ayah text - Adaptive sizing for different ayah lengths
@@ -176,29 +268,33 @@ fun PlayerScreenNew(
                         // For very long ayahs, use single-line marquee instead of multiline
                         if (textLength > 300) {
                             // Single line with auto-scrolling marquee for long ayahs
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 20.dp, horizontal = 16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = ayahText,
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    fontSize = fontSize,
-                                    textAlign = TextAlign.Center,
-                                    color = Color.Black,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
+                            // Force RTL layout for proper Arabic text scrolling
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                                Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .basicMarquee(
-                                            iterations = Int.MAX_VALUE,
-                                            delayMillis = 1000,
-                                            initialDelayMillis = 2000,
-                                            velocity = 30.dp
-                                        )
-                                )
+                                        .padding(vertical = 20.dp, horizontal = 16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = ayahText,
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        fontSize = fontSize,
+                                        textAlign = TextAlign.Center,
+                                        color = Color.Black,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .basicMarquee(
+                                                iterations = Int.MAX_VALUE,
+                                                delayMillis = 1000,
+                                                initialDelayMillis = 2000,
+                                                velocity = 30.dp,
+                                                spacing = androidx.compose.foundation.MarqueeSpacing(0.dp)
+                                            )
+                                    )
+                                }
                             }
                         } else {
                             // Multiline scrollable for shorter ayahs
@@ -228,31 +324,6 @@ fun PlayerScreenNew(
                         )
                     }
 
-                    // Reciter name
-                    playbackState.currentReciterName?.let {
-                        Divider(
-                            modifier = Modifier.padding(vertical = 16.dp),
-                            color = islamicGreen.copy(alpha = 0.2f)
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                Icons.Default.Person,
-                                contentDescription = null,
-                                tint = islamicGreen,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = it,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = islamicGreen,
-                                fontSize = 16.sp
-                            )
-                        }
-                    }
                 }
             }
 
@@ -366,31 +437,6 @@ fun PlayerScreenNew(
                         }
                     }
 
-                    // Nudge controls
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = { viewModel.nudgeBackward() },
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = islamicGreen
-                            )
-                        ) {
-                            Icon(Icons.Default.FastRewind, null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("-250ms")
-                        }
-                        OutlinedButton(
-                            onClick = { viewModel.nudgeForward() },
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = islamicGreen
-                            )
-                        ) {
-                            Text("+250ms")
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(Icons.Default.FastForward, null, modifier = Modifier.size(16.dp))
-                        }
-                    }
 
                     // Bookmark button
                     Button(

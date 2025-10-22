@@ -23,6 +23,7 @@ import com.quranmedia.player.data.database.entity.DownloadTaskEntity
 @Composable
 fun DownloadsScreen(
     onNavigateBack: () -> Unit,
+    onDownloadClick: (reciterId: String, surahNumber: Int) -> Unit = { _, _ -> },
     viewModel: DownloadsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -74,6 +75,11 @@ fun DownloadsScreen(
                         items(state.downloads, key = { it.id }) { download ->
                             DownloadCard(
                                 download = download,
+                                onClick = {
+                                    if (download.status == DownloadStatus.COMPLETED.name) {
+                                        onDownloadClick(download.reciterId, download.surahNumber)
+                                    }
+                                },
                                 onPause = { viewModel.pauseDownload(download.id) },
                                 onResume = { viewModel.resumeDownload(download.id) },
                                 onCancel = { viewModel.cancelDownload(download.id) },
@@ -117,6 +123,7 @@ private fun EmptyDownloadsView(modifier: Modifier = Modifier) {
 @Composable
 private fun DownloadCard(
     download: DownloadTaskEntity,
+    onClick: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onCancel: () -> Unit,
@@ -125,6 +132,7 @@ private fun DownloadCard(
     val islamicGreen = Color(0xFF2E7D32)
 
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(

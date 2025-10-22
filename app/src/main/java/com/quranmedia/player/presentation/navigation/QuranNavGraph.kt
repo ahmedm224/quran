@@ -115,7 +115,10 @@ fun QuranNavGraph(navController: NavHostController) {
 
         composable(Screen.Downloads.route) {
             DownloadsScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onDownloadClick = { reciterId, surahNumber ->
+                    navController.navigate(Screen.Player.createRoute(reciterId, surahNumber))
+                }
             )
         }
     }

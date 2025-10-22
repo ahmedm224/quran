@@ -6,6 +6,7 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
@@ -43,13 +44,16 @@ class QuranPlayer @Inject constructor(
         }
 
         // Create HTTP data source factory for streaming
-        val dataSourceFactory = DefaultHttpDataSource.Factory()
+        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
             .setUserAgent("QuranMediaPlayer/1.0")
             .setConnectTimeoutMs(DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS)
             .setReadTimeoutMs(DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS)
             .setAllowCrossProtocolRedirects(true)
 
-        // Create media source factory with HTTP support
+        // Create data source factory that supports both HTTP streaming and local files
+        val dataSourceFactory = DefaultDataSource.Factory(context, httpDataSourceFactory)
+
+        // Create media source factory with support for both HTTP and file URIs
         val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
 
         return ExoPlayer.Builder(context)
@@ -74,7 +78,7 @@ class QuranPlayer @Inject constructor(
                 // Add player listener
                 addListener(playerListener)
 
-                Timber.d("ExoPlayer created with HTTP streaming support and exact seek parameters")
+                Timber.d("ExoPlayer created with HTTP/File streaming support and exact seek parameters")
             }
             .also { _player = it }
     }

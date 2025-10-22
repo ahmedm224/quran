@@ -134,8 +134,8 @@ fun SurahsScreenNew(
                             readOnly = true,
                             label = {
                                 Column {
-                                    Text("القارئ", fontSize = 12.sp)
-                                    Text("Reciter", fontSize = 10.sp)
+                                    Text("القارئ", fontSize = 12.sp, color = islamicGreen)
+                                    Text("Reciter", fontSize = 10.sp, color = darkGreen)
                                 }
                             },
                             trailingIcon = {
@@ -149,7 +149,10 @@ fun SurahsScreenNew(
                                 focusedBorderColor = islamicGreen,
                                 unfocusedBorderColor = islamicGreen.copy(alpha = 0.5f),
                                 focusedLabelColor = islamicGreen,
-                                unfocusedLabelColor = darkGreen
+                                unfocusedLabelColor = darkGreen,
+                                focusedTextColor = darkGreen,
+                                unfocusedTextColor = Color.Black,
+                                cursorColor = islamicGreen
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -159,22 +162,25 @@ fun SurahsScreenNew(
 
                         ExposedDropdownMenu(
                             expanded = reciterDropdownExpanded,
-                            onDismissRequest = { reciterDropdownExpanded = false }
+                            onDismissRequest = { reciterDropdownExpanded = false },
+                            modifier = Modifier.background(Color.White)
                         ) {
                             reciters.forEach { reciter ->
+                                val isSelected = reciter.id == selectedReciter?.id
                                 DropdownMenuItem(
                                     text = {
                                         Column {
                                             Text(
                                                 text = reciter.name,
-                                                fontWeight = FontWeight.Medium,
-                                                color = Color.Black
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                fontSize = 15.sp,
+                                                color = if (isSelected) Color.White else darkGreen
                                             )
                                             reciter.nameArabic?.let { arabicName ->
                                                 Text(
                                                     text = arabicName,
-                                                    fontSize = 12.sp,
-                                                    color = Color.Gray
+                                                    fontSize = 13.sp,
+                                                    color = if (isSelected) lightGreen.copy(alpha = 0.9f) else Color.Gray
                                                 )
                                             }
                                         }
@@ -184,12 +190,12 @@ fun SurahsScreenNew(
                                         reciterDropdownExpanded = false
                                     },
                                     colors = MenuDefaults.itemColors(
-                                        textColor = Color.Black,
-                                        leadingIconColor = Color.Black,
-                                        trailingIconColor = Color.Black,
-                                        disabledTextColor = Color.Gray,
-                                        disabledLeadingIconColor = Color.Gray,
-                                        disabledTrailingIconColor = Color.Gray
+                                        textColor = darkGreen,
+                                        leadingIconColor = darkGreen,
+                                        disabledTextColor = Color.Gray
+                                    ),
+                                    modifier = Modifier.background(
+                                        if (isSelected) islamicGreen else Color.Transparent
                                     )
                                 )
                             }
@@ -241,7 +247,7 @@ fun SurahsScreenNew(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(surahs) { surah ->
                         SurahItemNew(
@@ -280,7 +286,7 @@ fun SurahItemNew(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = isEnabled, onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isEnabled) Color.White else Color.White.copy(alpha = 0.6f)
         ),
@@ -289,13 +295,13 @@ fun SurahItemNew(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Surah number circle
+            // Surah number circle - smaller
             Box(
                 modifier = Modifier
-                    .size(52.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .background(
                         if (surah.number == 1) goldAccent.copy(alpha = 0.2f)
@@ -305,64 +311,42 @@ fun SurahItemNew(
             ) {
                 Text(
                     text = surah.number.toString(),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontSize = 18.sp,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = if (surah.number == 1) Color(0xFFF57C00) else islamicGreen
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-            // Surah info (English)
+            // Surah info - compact
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = surah.nameEnglish,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontSize = 16.sp,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black
                 )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = null,
-                        tint = Color.Gray,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Text(
-                        text = when (surah.revelationType) {
-                            RevelationType.MECCAN -> "Meccan"
-                            RevelationType.MEDINAN -> "Medinan"
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                    Text(
-                        text = "•",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
-                    Text(
-                        text = "${surah.ayahCount} ayahs",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                }
+                Text(
+                    text = "${when (surah.revelationType) {
+                        RevelationType.MECCAN -> "Meccan"
+                        RevelationType.MEDINAN -> "Medinan"
+                    }} • ${surah.ayahCount} ayahs",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = 11.sp,
+                    color = Color.Gray
+                )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
-            // Arabic name
+            // Arabic name - smaller
             Text(
                 text = surah.nameArabic,
-                style = MaterialTheme.typography.headlineSmall,
-                fontSize = 24.sp,
+                style = MaterialTheme.typography.titleMedium,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = islamicGreen
             )

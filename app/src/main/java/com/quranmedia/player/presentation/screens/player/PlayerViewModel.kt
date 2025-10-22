@@ -114,6 +114,10 @@ class PlayerViewModel @Inject constructor(
         playbackController.previousAyah()
     }
 
+    fun seekToAyah(ayahNumber: Int) {
+        playbackController.seekToAyah(ayahNumber)
+    }
+
     fun nudgeForward() {
         playbackController.nudgeForward()
     }
@@ -217,17 +221,24 @@ class PlayerViewModel @Inject constructor(
     fun checkDownloadStatus(reciterId: String, surahNumber: Int) {
         viewModelScope.launch {
             try {
-                // Check if this surah is already downloaded
-                val downloadTask = downloadManager.getAllDownloads().first()
-                    .firstOrNull { it.reciterId == reciterId && it.surahNumber == surahNumber }
+                // Observe download status changes continuously
+                downloadManager.getAllDownloads().collect { downloads ->
+                    val downloadTask = downloads.firstOrNull {
+                        it.reciterId == reciterId && it.surahNumber == surahNumber
+                    }
 
-                _downloadState.value = when {
-                    downloadTask == null -> DownloadButtonState.NotDownloaded
-                    downloadTask.status == com.quranmedia.player.data.database.entity.DownloadStatus.COMPLETED.name ->
-                        DownloadButtonState.Downloaded
-                    downloadTask.status == com.quranmedia.player.data.database.entity.DownloadStatus.IN_PROGRESS.name ->
-                        DownloadButtonState.Downloading
-                    else -> DownloadButtonState.NotDownloaded
+                    _downloadState.value = when {
+                        downloadTask == null -> DownloadButtonState.NotDownloaded
+                        downloadTask.status == com.quranmedia.player.data.database.entity.DownloadStatus.COMPLETED.name -> {
+                            Timber.d("Download completed for surah $surahNumber")
+                            DownloadButtonState.Downloaded
+                        }
+                        downloadTask.status == com.quranmedia.player.data.database.entity.DownloadStatus.IN_PROGRESS.name -> {
+                            Timber.d("Download in progress for surah $surahNumber: ${(downloadTask.progress * 100).toInt()}%")
+                            DownloadButtonState.Downloading
+                        }
+                        else -> DownloadButtonState.NotDownloaded
+                    }
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Error checking download status")

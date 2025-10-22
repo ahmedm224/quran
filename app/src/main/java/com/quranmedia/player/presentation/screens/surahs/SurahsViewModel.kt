@@ -21,14 +21,14 @@ class SurahsViewModel @Inject constructor(
     val surahs: StateFlow<List<Surah>> = quranRepository.getAllSurahs()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Lazily,  // Start on first subscriber and keep active
             initialValue = emptyList()
         )
 
     val reciters: StateFlow<List<Reciter>> = quranRepository.getAllReciters()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Lazily,  // Start on first subscriber and keep active
             initialValue = emptyList()
         )
 

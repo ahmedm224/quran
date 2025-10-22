@@ -231,6 +231,30 @@ class PlaybackController @Inject constructor(
                 return
             }
 
+            // Check if we have a downloaded file first (for offline playback)
+            val audioVariants = quranRepository.getAudioVariants(reciterId, surahNumber).first()
+            val downloadedVariant = audioVariants.firstOrNull { !it.localPath.isNullOrBlank() }
+
+            if (downloadedVariant != null && downloadedVariant.localPath != null) {
+                val localFile = java.io.File(downloadedVariant.localPath)
+                if (localFile.exists()) {
+                    Timber.d("Playing downloaded file: ${downloadedVariant.localPath}")
+                    // Use Uri.fromFile() for proper local file handling
+                    val fileUri = Uri.fromFile(localFile)
+                    playSingleAudio(
+                        audioUrl = fileUri.toString(),
+                        surahNameArabic = surahNameArabic,
+                        surahNameEnglish = surahNameEnglish,
+                        reciterName = reciterName,
+                        reciterId = reciterId,
+                        surahNumber = surahNumber
+                    )
+                    return
+                } else {
+                    Timber.w("Downloaded file not found at: ${downloadedVariant.localPath}")
+                }
+            }
+
             // Fetch surah data with ayah audio URLs from API (on background thread)
             Timber.d("Fetching ayah audio URLs from API for reciter: $reciterId, surah: $surahNumber")
             val surahResponse = quranRepository.getSurahWithAudio(surahNumber, reciterId)
@@ -389,10 +413,19 @@ class PlaybackController @Inject constructor(
     }
 
     fun seekToAyah(ayahNumber: Int) {
-        val ayah = ayahIndices.find { it.ayahNumber == ayahNumber }
-        ayah?.let {
-            seekTo(it.startMs)
-            _playbackState.value = _playbackState.value.copy(currentAyah = ayahNumber)
+        mediaController?.let { controller ->
+            // Each ayah is a separate media item in the playlist
+            // Ayah numbers are 1-based, but media item indices are 0-based
+            val ayahIndex = ayahNumber - 1
+
+            if (ayahIndex >= 0 && ayahIndex < controller.mediaItemCount) {
+                controller.seekToDefaultPosition(ayahIndex)
+                Timber.d("Seeking to ayah $ayahNumber (media item index: $ayahIndex)")
+
+                _playbackState.value = _playbackState.value.copy(currentAyah = ayahNumber)
+            } else {
+                Timber.e("Invalid ayah number: $ayahNumber (valid range: 1-${controller.mediaItemCount})")
+            }
         }
     }
 
