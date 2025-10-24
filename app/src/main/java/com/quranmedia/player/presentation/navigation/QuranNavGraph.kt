@@ -25,8 +25,8 @@ fun QuranNavGraph(navController: NavHostController) {
             HomeScreenNew(
                 onNavigateToReciters = { navController.navigate(Screen.Reciters.route) },
                 onNavigateToSurahs = {
-                    // Navigate to reciters first - user must select a reciter before browsing surahs
-                    navController.navigate(Screen.Reciters.route)
+                    // Navigate directly to Surahs screen with reciter dropdown
+                    navController.navigate(Screen.Surahs.route)
                 },
                 onNavigateToPlayer = { reciterId, surahNumber, resume ->
                     navController.navigate(Screen.Player.createRoute(reciterId, surahNumber, resume))

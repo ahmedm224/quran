@@ -64,7 +64,9 @@
       "Bash(curl -s \"https://api.alquran.cloud/v1/search/الله/all\")",
       "Bash(curl -s \"https://api.alquran.cloud/v1/search/الله/quran-simple\")",
       "Bash(curl -s \"https://api.alquran.cloud/v1/search/الله\")",
-      "Bash(cmd.exe /c \"dir D:\\Dev\\Apps\\quran_media\\build_log.txt 2>nul && echo File exists || echo File does not exist\")"
+      "Bash(cmd.exe /c \"dir D:\\Dev\\Apps\\quran_media\\build_log.txt 2>nul && echo File exists || echo File does not exist\")",
+      "Bash(cmd.exe /c \"if exist D:\\Dev\\Apps\\quran_media\\app\\build\\outputs\\apk\\debug\\app-debug.apk (echo APK found && dir D:\\Dev\\Apps\\quran_media\\app\\build\\outputs\\apk\\debug\\app-debug.apk) else (echo APK not found)\")",
+      "Bash(cmd.exe /c \"dir /s /b D:\\Dev\\Apps\\quran_media\\app\\build\\outputs\\apk\\*.apk 2>nul\")"
     ],
     "deny": [],
     "ask": []
