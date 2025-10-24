@@ -1,12 +1,16 @@
 # Add project specific ProGuard rules here.
 
-# CRITICAL: Don't obfuscate app code - keeps class/method names readable
+# CRITICAL: Don't obfuscate or shrink - ensures everything works
 -dontobfuscate
+-dontshrink
 
-# Keep all app classes and members - prevents R8 from removing needed code
--keep,allowoptimization class com.quranmedia.player.** { *; }
+# Keep all app classes and members
+-keep class com.quranmedia.player.** { *; }
 -keepclassmembers class com.quranmedia.player.** { *; }
 -keepnames class com.quranmedia.player.** { *; }
+
+# Keep all attributes for proper functionality
+-keepattributes *
 
 # Keep ExoPlayer classes
 -keep class androidx.media3.** { *; }
